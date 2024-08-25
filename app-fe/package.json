@@ -13,7 +13,6 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@ai-sdk/google": "^0.0.24",
     "@auth/drizzle-adapter": "1.1.0",
     "@hookform/resolvers": "^3.4.2",
     "@libsql/client": "0.6.1",
@@ -45,7 +44,6 @@
     "dotenv": "16.4.5",
     "drizzle-orm": "0.30.10",
     "framer-motion": "^11.2.12",
-    "i": "^0.3.7",
     "lucia": "^3.0.1",
     "lucide-react": "0.381.0",
     "next": "14.2.3",
@@ -80,9 +78,5 @@
     "postcss": "8.4.38",
     "tailwindcss": "3.4.3",
     "typescript": "5.4.5"
-  },
-  "engines": {
-    "pnpm": ">=9.0.0 <10.0.0",
-    "node": ">=20.0.0 <21.0.0"
   }
 }
