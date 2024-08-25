@@ -7,44 +7,59 @@ import { Spotlight } from "@/components/ui/spotlight";
 import { Newspaper, TrendingUp, Brain, BarChart2, Building } from "lucide-react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { getCurrentUser } from "@/lib/session";
+import Image from "next/image";
+import NewsImage from "../../public/news-sentiment.jpeg"
+import AnalystsImage from "../../public/analysts-image.jpeg"
+import AiInsightsImage from "../../public/ai-insights.jpeg"
+import FinAnalysisImage from "../../public/wide-analysis.jpeg"
+import IndustryAnalysisImage from "../../public/industry.jpeg"
+
 
 export default async function HomePage() {
   const user = await getCurrentUser();
 
-  const Skeleton = () => (
-    <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-200 dark:from-blue-950 dark:to-neutral-950 to-neutral-100"></div>
+  const Skeleton = ({image,alt,wide}:{
+    image:any,
+    alt:string
+    wide?:boolean
+  }) => (
+    <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-200 dark:from-blue-950 dark:to-neutral-950 to-neutral-100">
+      <Image src={image} alt={alt} width={wide ? 650 : 280} height={200} className="rounded-xl object-cover"/>
+    </div>
   );
+
+
 
   const features = [
     {
       title: "News Sentiment Analysis",
       description: "Analyze market sentiment from latest news articles.",
       icon: <Newspaper className="w-6 h-6 text-blue-500" />,
-      header: <Skeleton />,
+      header: <Skeleton image={NewsImage} alt="news-sentiment"/>,
     },
     {
       title: "Analyst Ratings",
       description: "Aggregate and interpret professional analyst recommendations.",
       icon: <TrendingUp className="w-6 h-6 text-green-500" />,
-      header: <Skeleton />,
+      header: <Skeleton image={AnalystsImage}  alt="Analyst Ratings"/>,
     },
     {
       title: "AI-Powered Insights",
       description: "Get intelligent investment suggestions based on comprehensive analysis.",
       icon: <Brain className="w-6 h-6 text-purple-500" />,
-      header: <Skeleton />,
+      header: <Skeleton image={AiInsightsImage}  alt="AI-Powered Insights"/>,
     },
     {
       title: "Financial Analysis",
       description: "Deep dive into company financials and performance metrics.",
       icon: <BarChart2 className="w-6 h-6 text-yellow-500" />,
-      header: <Skeleton />,
+      header: <Skeleton image={FinAnalysisImage} alt="Financial Analysis" wide/>,
     },
     {
       title: "Industry Analysis",
       description: "Understand market trends and industry-specific factors.",
       icon: <Building className="w-6 h-6 text-pink-500" />,
-      header: <Skeleton />,
+      header: <Skeleton image={IndustryAnalysisImage} alt="Industry Analysis" />,
     },
   ];
 
