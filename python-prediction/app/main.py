@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .models import StockPredictionRequest, StockPredictionResponse
-from .prediction import predict_stock
+from .prediction import plot_values, predict_stock
 from .utils import fetch_stock_data
 from datetime import datetime, timedelta
 
@@ -19,7 +19,7 @@ app.add_middleware(
 async def predict(request: StockPredictionRequest):
     try:
         end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
+        start_date = end_date - timedelta(days=250)
         
         data = fetch_stock_data(request.ticker, start_date, end_date)
         prediction = predict_stock(data)
