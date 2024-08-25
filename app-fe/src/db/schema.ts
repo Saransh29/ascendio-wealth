@@ -83,11 +83,5 @@ export const sessions = pgTable("session", {
   }).notNull(),
 });
 
-/**
-  Goals with quests
- 
- */
-
-
 export type User = typeof users.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
