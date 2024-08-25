@@ -2,7 +2,8 @@ fastapi==0.95.0
 uvicorn==0.20.0
 pydantic==1.10.7
 redis==5.0.8
-yfinance==0.1.63
+yfinance==0.2.18
+pandas==1.5.3
 requests==2.26.0
 beautifulsoup4==4.12.2
 aioredis==2.0.1

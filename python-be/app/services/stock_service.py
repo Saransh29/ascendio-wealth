@@ -7,6 +7,8 @@ import ast
 import json
 import logging
 import asyncio
+import pandas as pd
+
 
 class StockService:
     def __init__(self):
@@ -114,16 +116,21 @@ class StockService:
             # cached_result = await self.cache_service.get(cache_key)
             # if cached_result:
             #     return json.loads(cached_result)
-
-            end_date = datetime.now().date()
-            start_date = end_date - timedelta(days=years*365)
+            end_date = pd.Timestamp.now().tz_localize('UTC')
+            start_date = end_date - pd.Timedelta(days=years*365)
 
             stock = yf.Ticker(ticker)
 
             hist_data = stock.history(start=start_date, end=end_date)
+            
+            hist_data["Dividends"] = hist_data["Dividends"].fillna(0)
+            hist_data["Stock Splits"] = hist_data["Stock Splits"].fillna(0)
+
             balance_sheet = stock.balance_sheet
             financials = stock.financials
             news = stock.news
+
+            return hist_data, balance_sheet, financials, news
 
             # result = hist_data, balance_sheet, financials, news
             # await self.cache_service.set(cache_key, json.dumps(result), expiration=3600)  # Cache for 1 hour
