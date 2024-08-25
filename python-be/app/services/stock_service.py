@@ -19,6 +19,7 @@ class StockService:
             print("HERE industry",industry)
             # cached_result = await self.cache_service.get(cache_key)
             # print("CACHE", cached_result)
+            # print (type(cached_result))
             # if cached_result:
             #     return json.loads(cached_result)
 
@@ -39,17 +40,20 @@ class StockService:
 
             for ticker, final_analysis, price, analysis in results:
                 if ticker not in industry_analsyis:
-                    industry_analsyis['ticker'] = analysis
+                    industry_analsyis[ticker] = analysis
                 analyses[ticker] = final_analysis
                 prices[ticker] = price
 
 
             ranking = await self.rank_companies(industry, analyses, prices)
-            result = {"tickers": tickers, "analyses": analyses, "ranking": ranking, industry_analsyis: industry_analsyis}
+            result = {"tickers": tickers, "analyses": analyses, "ranking": ranking}
+            # result = {"tickers": tickers, "analyses": analyses, "ranking": ranking, industry_analsyis: industry_analsyis}
+
             
             # await self.cache_service.set(cache_key, result, expiration=3600)  # Cache for 1 hour
             return result
         except Exception as e:
+            print("ERROR",e)
             logging.error(f"Error in analyze_industry: {str(e)}")
             return {"error": "An error occurred while analyzing the industry"}
 
@@ -288,22 +292,23 @@ class StockService:
 
     async def rank_companies(self, industry, analyses, prices):
         cache_key = f"rank_companies_{industry}"
-        # cached_result = await self.cache_service.get(cache_key)
-        # if cached_result:
-        #     return cached_result
+        cached_result = await self.cache_service.get(cache_key)
+        if cached_result:
+            return cached_result
 
         try:
-            system_prompt = f"You are a financial analyst providing a ranking of companies in the {industry} industry based on their investment potential. Be discerning and sharp. Truly think about whether a stock is valuable or not. You are a skeptical investor."
+            system_prompt = f"You are a financial analyst providing a ranking of companies in the {industry} industry based on their investment potential. Be discerning and sharp. Truly think about whether a stock is valuable or not. You are a skeptical investor. Return output in proper markdown."
             analysis_text = "\n\n".join(
                 f"Ticker: {ticker}\nCurrent Price: {prices.get(ticker, 'N/A')}\nAnalysis:\n{analysis}"
                 for ticker, analysis in analyses.items()
             )
-            input_text = f"Industry: {industry}\n\n Company Analyses:\n{analysis_text}\n\nBased on the provided analyses, please rank the companies from most attractive to least attractive for investment. Provide a brief rationale for your ranking. In each rationale, include the current price (if available) and a price target."
+            input_text = f"Industry: {industry}\n\n Company Analyses:\n{analysis_text}\n\nBased on the provided analyses, please rank the companies from most attractive to least attractive for investment. Provide a brief rationale for your ranking. In each rationale, include the current price (if available) and a price target. return output in proper markdown. \n\n RANKING:"
 
-            response = await self.llm_service.generate_text(system_prompt, input_text, max_tokens=400)
+            response = await self.llm_service.generate_text(system_prompt, input_text, max_tokens=500)
 
             if response != "Unable to retrieve analysis.":
                 await self.cache_service.set(cache_key, response, expiration=3600)  # Cache for 1 hour
+            print(f"RANKING-{industry}:", response)
             return response
 
         except:
