@@ -8,8 +8,14 @@ import { User } from "lucia";
 import { Session } from "lucia";
 import { env } from "@/env";
 import { UserId as CustomUserId } from "@/types";
+import { PostgreSQLSessionTable, PostgreSQLUserTable } from "@lucia-auth/adapter-drizzle";
 
-const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users);
+const adapter = new DrizzlePostgreSQLAdapter(
+  db,
+  sessions as unknown as PostgreSQLSessionTable,
+  users as unknown as PostgreSQLUserTable
+);
+
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
