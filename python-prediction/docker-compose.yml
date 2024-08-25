@@ -4,6 +4,6 @@ services:
   web:
     build: .
     ports:
-      - "5003:8000"
+      - "5004:5004"
     volumes:
       - .:/app
