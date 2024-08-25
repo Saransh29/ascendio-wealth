@@ -58,7 +58,7 @@ export default async function DashboardPage() {
           <div>
             <h2 className="text-3xl font-bold mb-6">Our Vision</h2>
             <p className="text-gray-300 mb-4">
-              In today's fast-paced world, staying updated with the latest market trends and news is crucial. Our tool helps you cut through the noise and focus on what truly matters.
+              In today&apos;s fast-paced world, staying updated with the latest market trends and news is crucial. Our tool helps you cut through the noise and focus on what truly matters.
             </p>
             <p className="text-gray-300 mb-4">
               We believe in empowering investors with the right information at the right time, so you can make decisions with confidence and clarity.
