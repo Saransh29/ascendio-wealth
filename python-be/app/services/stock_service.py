@@ -62,13 +62,13 @@ class StockService:
     async def analyze_stock(self, ticker):
         try:
             cache_key = f"analyze_stock_{ticker}"
-            # cached_result = await self.cache_service.get(cache_key)
-            # if cached_result:
-            #     return json.loads(cached_result)
+            cached_result = await self.cache_service.get(cache_key)
+            if cached_result:
+                return cached_result
             print("============================================")
             print("Analysing TICKER:",ticker)
 
-            hist_data, balance_sheet, financials, news = await self.get_stock_data(ticker, 1)
+            news = await self.get_stock_data(ticker, 1)
 
             sentiment_task = self.get_sentiment_analysis(ticker, news)
             analyst_ratings_task = self.get_analyst_ratings(ticker)
@@ -78,19 +78,7 @@ class StockService:
                 sentiment_task, analyst_ratings_task, industry_analysis_task
             )
 
-            # print("-------")
-            # print("SENTIMENT analysis:", sentiment_analysis)
-            # print("-------")
-            # print("analyst_ratings:", analyst_ratings)
-            # print("-------")
-            # print("industry_analysis", industry_analysis)
-            # print("-------")
-            # print("industry_analysis",industry_analysis)
-
             final_analysis = await self.get_final_analysis(ticker, {}, sentiment_analysis, analyst_ratings, industry_analysis)
-
-            # print("-------")
-            # print("final_analysis",final_analysis)
 
             price = await self.get_current_price(ticker)
 
@@ -100,11 +88,12 @@ class StockService:
                 "analyst_ratings": analyst_ratings,
                 "industry_analysis": industry_analysis,
                 "final_analysis": final_analysis,
-                "price": float(price)  # Convert numpy.float64 to float
+                "price": price
             }
 
             # TODO: FIX THIS
-            # await self.cache_service.set(cache_key, json.dumps(result), expiration=1800)  # Cache for 30 minutes
+            # if result:
+            #     await self.cache_service.set(cache_key, json.dumps(result), expiration=1800)  # Cache for 30 minutes
             return result
         except Exception as e:
             logging.error(f"Error in analyze_stock for {ticker}: {str(e)}")
@@ -113,38 +102,26 @@ class StockService:
     async def get_stock_data(self, ticker, years):
         try:
             cache_key = f"stock_data_{ticker}_{years}"
-            # cached_result = await self.cache_service.get(cache_key)
-            # if cached_result:
-            #     return json.loads(cached_result)
-            end_date = pd.Timestamp.now().tz_localize('UTC')
-            start_date = end_date - pd.Timedelta(days=years*365)
-
+            cached_result = await self.cache_service.get(cache_key)
+            if cached_result:
+                return json.loads(cached_result)
             stock = yf.Ticker(ticker)
 
-            hist_data = stock.history(start=start_date, end=end_date)
-            
-            hist_data["Dividends"] = hist_data["Dividends"].fillna(0)
-            hist_data["Stock Splits"] = hist_data["Stock Splits"].fillna(0)
-
-            balance_sheet = stock.balance_sheet
-            financials = stock.financials
             news = stock.news
-
-            return hist_data, balance_sheet, financials, news
-
-            # result = hist_data, balance_sheet, financials, news
-            # await self.cache_service.set(cache_key, json.dumps(result), expiration=3600)  # Cache for 1 hour
-            
-            return hist_data, balance_sheet, financials, news
+            if news:
+                await self.cache_service.set(cache_key, json.dumps(news), expiration=3600)  # Cache for 1 hour
+            return  news
         except Exception as e:
             logging.error(f"Error in get_stock_data for {ticker}: {str(e)}")
-            return None
+            return {"error": f"An error occurred while fetching stock data for {ticker}"}
+
 
     async def generate_ticker_ideas(self, industry):
         try:
             cache_key = f"ticker_ideas_{industry}"
             cached_result = await self.cache_service.get(cache_key)
             if cached_result:
+                print("CACHE HIT", cache_key)
                 return json.loads(cached_result)
 
             system_prompt = f"You are a financial assistant. You carefully follow instructions. Don't return markdown. Don't return backticks. Don't return any code, just return a python-parseable list. "
@@ -165,23 +142,25 @@ class StockService:
             cache_key = f"sentiment_analysis_{ticker}"
             cached_result = await self.cache_service.get(cache_key)
             if cached_result:
+                print("CACHE HIT", cache_key)
                 return cached_result.decode('utf-8')
 
-            system_prompt = f"You are a sentiment analysis assistant. Analyze the sentiment of the given news articles for {ticker} and provide a summary of the overall sentiment and any notable changes over time. Be measured and discerning. You are a skeptical investor."
+            system_prompt = f"You are a sentiment analysis assistant. Analyze the sentiment of the given news articles for {ticker} and provide a summary of the overall sentiment and any notable changes over time. Be measured and discerning. You are a skeptical investor. Be precise and to the point."
           
             news_text = ""
-            for article in news:
+            for article in news[:5]:
                 print(f"analyzing article {article['title']}")
                 article_text = get_article_text(article['link'])
                 timestamp = datetime.fromtimestamp(
                     article['providerPublishTime']).strftime("%Y-%m-%d")
                 news_text += f"\n\n---\n\nDate: {timestamp}\nTitle: {article['title']}\nText: {article_text}"
 
-            input_text = f"News articles for {ticker}:\n{news_text}\n\n----\n\nProvide a summary of the overall sentiment and any notable changes over time."
+            input_text = f"News articles for {ticker}:\n{news_text}\n\n----\n\nProvide a summary of the overall sentiment and any notable changes over time. \n\n Summary:"
 
             response = await self.llm_service.generate_text(system_prompt, input_text, max_tokens=350)
 
-            await self.cache_service.set(cache_key, response, expiration=3600)  # Cache for 1 hour
+            if response:
+                await self.cache_service.set(cache_key, response, expiration=7200)  # Cache for 2 hours
             return response
         except Exception as e:
             logging.error(f"Error in get_sentiment_analysis for {ticker}: {str(e)}")
@@ -238,6 +217,7 @@ class StockService:
         cache_key = f"industry_analysis_{ticker}"
         cached_result = await self.cache_service.get(cache_key)
         if cached_result:
+            print("CACHE HIT", cache_key)
             return cached_result
 
         try:
@@ -264,6 +244,7 @@ class StockService:
         cache_key = f"final_analysis_{ticker}"
         cached_result = await self.cache_service.get(cache_key)
         if cached_result:
+            print("CACHE HIT", cache_key)
             return cached_result
 
         try:
@@ -291,16 +272,21 @@ class StockService:
             data = stock.history(period='1d', interval='1m')
             result = data['Close'][-1]
 
-            await self.cache_service.set(cache_key, result, expiration=60)  # Cache for 1 minute
-            return result
+            price = float(result)
+
+            if result:
+                await self.cache_service.set(cache_key, price, expiration=60)  # Cache for 1 minute
+            return price
         except Exception as e:
             logging.error(f"Error in get_current_price for {ticker}: {str(e)}")
             return None
 
     async def rank_companies(self, industry, analyses, prices):
-        cache_key = f"rank_companies_{industry}"
+        tickers = "-".join(analyses.keys())
+        cache_key = f"rank_companies_{industry}_{tickers}"
         cached_result = await self.cache_service.get(cache_key)
         if cached_result:
+            print("CACHE HIT", cache_key)
             return cached_result
 
         try:
@@ -315,7 +301,6 @@ class StockService:
 
             if response != "Unable to retrieve analysis.":
                 await self.cache_service.set(cache_key, response, expiration=3600)  # Cache for 1 hour
-            print(f"RANKING-{industry}:", response)
             return response
 
         except:

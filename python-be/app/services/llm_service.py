@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 class LLMService:
     def __init__(self):
-        self.cache_service = CacheService()
         try:
             self.access_token = self.generate_access_token()
             self.headers = {
@@ -21,13 +20,7 @@ class LLMService:
             logger.error(f"Failed to initialize LLMService: {e}")
             raise
 
-    async def generate_access_token(self):
-        cache_key = f"ibm-watsonx-access-token"
-        cached_result = await self.cache_service.get(cache_key)
-        if cached_result :
-            print("CACHE HIT",cached_result)
-            return cached_result
-
+    def generate_access_token(self):
         IBM_API_KEY = os.getenv('IBM_API_KEY')
         if not IBM_API_KEY:
             raise ValueError("IBM_API_KEY environment variable is not set")
@@ -40,10 +33,7 @@ class LLMService:
             response = requests.post(url, headers=headers, data=data)
             response.raise_for_status()
             response_json = response.json()
-            print("ACCESS TOKEN GENERATED")
             access_token = response_json["access_token"]
-            if access_token:
-                await self.cache_service.set(cache_key, access_token, 300) 
             return access_token
         except requests.RequestException as e:
             logger.error(f"Failed to generate access token: {e}")
