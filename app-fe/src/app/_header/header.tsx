@@ -67,7 +67,7 @@ async function ProfileAvatar({ userId }: { userId: string }) {
 
   return (
     <Avatar>
-      <AvatarImage src={"/next.svg"} />
+      {/* <AvatarImage src={"/next.svg"} /> */}
       <AvatarFallback>
         {profile.displayName?.substring(0, 2).toUpperCase() ?? "AA"}
       </AvatarFallback>
