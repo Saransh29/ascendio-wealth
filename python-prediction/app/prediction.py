@@ -30,7 +30,7 @@ def predict_future(svm_model, X_last, steps_ahead, scaler):
     
     return future_predictions
 
-def predict_stock(data, steps_ahead=30, model_path="/Users/anubhavkataria/Desktop/Hackathons/IBM_watsonx/ascendio-wealth/python-prediction/SVM_model.joblib"):
+def predict_stock(data, steps_ahead=30, model_path="python-prediction/SVM_model.joblib"):
     last_adjusted_close = data['Adjusted Close'].iloc[-1]
     data_df = data.drop(data.columns[0], axis=1).reset_index(drop=True)
     
