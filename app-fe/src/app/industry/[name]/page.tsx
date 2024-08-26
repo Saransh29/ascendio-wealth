@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { analyzeIndustry } from "@/data-access/python-be-api";
-import IndustryAnalysisUI from "./IndustryAnalysisUI";
+import IndustryAnalysisUI from "./components/industryAnalysisUI";
 import { Suspense } from "react";
 
 export default async function IndustryAnalysisPage({

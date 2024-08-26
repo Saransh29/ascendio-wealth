@@ -1,7 +1,7 @@
-import React from 'react';
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from "react-markdown";
 
 interface AnalysisData {
   tickers: string[];
@@ -14,7 +14,10 @@ interface IndustryAnalysisUIProps {
   analysisData: AnalysisData;
 }
 
-export function IndustryAnalysisUI({ industryName, analysisData }: IndustryAnalysisUIProps) {
+export function IndustryAnalysisUI({
+  industryName,
+  analysisData,
+}: IndustryAnalysisUIProps) {
   return (
     <div className="space-y-6">
       <Card>
@@ -22,7 +25,7 @@ export function IndustryAnalysisUI({ industryName, analysisData }: IndustryAnaly
           <CardTitle>{industryName} Industry Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Analyzed tickers: {analysisData.tickers.join(', ')}</p>
+          <p>Analyzed tickers: {analysisData.tickers.join(", ")}</p>
         </CardContent>
       </Card>
 
@@ -30,7 +33,9 @@ export function IndustryAnalysisUI({ industryName, analysisData }: IndustryAnaly
         <TabsList>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           {analysisData.tickers.map((ticker) => (
-            <TabsTrigger key={ticker} value={ticker}>{ticker}</TabsTrigger>
+            <TabsTrigger key={ticker} value={ticker}>
+              {ticker}
+            </TabsTrigger>
           ))}
         </TabsList>
 
