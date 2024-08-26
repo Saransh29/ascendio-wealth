@@ -333,7 +333,7 @@ class StockService:
 
             symbols = self._get_sp500_symbols()
 
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=2) as executor:
                 futures = [executor.submit(
                     self._get_stock_info, symbol) for symbol in symbols]
                 results = [future.result() for future in as_completed(futures)]
@@ -349,7 +349,8 @@ class StockService:
             top_50['Volume'] = top_50['Volume'].apply(lambda x: f"{x:,}")
 
             result = top_50.to_dict('records')
-            await self.cache_service.set(cache_key, json.dumps(result), expiration=900)
+            if result:
+                await self.cache_service.set(cache_key, json.dumps(result), expiration=1800)
             return result
         except Exception as e:
             logging.error(f"Error in get_top_50_sp500_stocks: {str(e)}")

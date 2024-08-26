@@ -18,6 +18,7 @@ export const env = createEnv({
     EMAIL_SERVER_PASSWORD: z.string().min(1),
     ALPHA_VANTAGE_API_KEY: z.string().min(1),
     FIN_MODELLING_PREP_API_KEY: z.string().min(1),
+    PYTHON_BE_BASE_URL: z.string().min(1),
   },
   client: {},
   runtimeEnv: {
@@ -36,5 +37,6 @@ export const env = createEnv({
     GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
     ALPHA_VANTAGE_API_KEY: process.env.ALPHA_VANTAGE_API_KEY,
     FIN_MODELLING_PREP_API_KEY: process.env.FIN_MODELLING_PREP_API_KEY,
+    PYTHON_BE_BASE_URL: process.env.PYTHON_BE_BASE_URL,
   },
 });

@@ -26,6 +26,7 @@ import {
   ShoppingBasket,
   Utensils,
 } from "lucide-react";
+import Link from "next/link";
 export default function Component() {
   const industries = [
     {
@@ -167,14 +168,15 @@ export default function Component() {
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4 md:px-6">
           {industries.map((industry, index) => (
-            <div
+            <Link
               key={index}
+              href={`/industry/${encodeURIComponent(industry.name)}`}
               className="bg-background rounded-lg shadow-lg p-6 flex flex-col gap-4 hover:bg-muted transition-colors cursor-pointer"
             >
               <industry.icon className="w-8 h-8 text-primary" />
               <h3 className="text-xl font-semibold">{industry.name}</h3>
               <p className="text-muted-foreground">{industry.description}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
