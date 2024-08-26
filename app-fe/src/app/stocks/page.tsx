@@ -7,7 +7,7 @@ export default async function StocksPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Top 50 S&P 500 Stocks</h1>
-      <StockList stocks={stocksData} />
+      <StockList stocks={stocksData?.data} />
     </div>
   );
 }
