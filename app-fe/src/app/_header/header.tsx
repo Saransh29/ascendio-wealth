@@ -26,7 +26,10 @@ export async function Header() {
     <div className="border-b py-4">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex gap-8 items-center">
-          <Link href="/" className="flex gap-2 items-center text-xl">
+          <Link
+            href={user?.id ? "/dashboard" : "/"}
+            className="flex gap-2 items-center text-xl"
+          >
             <Lightbulb />
             <div className="hidden md:block">Ascendio</div>
           </Link>
