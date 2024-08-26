@@ -8,17 +8,21 @@ import json
 import logging
 import asyncio
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
 
 
 class StockService:
     def __init__(self):
         self.llm_service = LLMService()
         self.cache_service = CacheService()
+        self.CACHE_FILE = 'sp500_cache.csv'
+        self.CACHE_EXPIRY_DAYS = 30
 
     async def analyze_industry(self, industry):
         try:
             cache_key = f"analyze_industry_{industry}"
-            print("HERE industry",industry)
+            print("HERE industry", industry)
             # cached_result = await self.cache_service.get(cache_key)
             # print("CACHE", cached_result)
             # print (type(cached_result))
@@ -26,7 +30,7 @@ class StockService:
             #     return json.loads(cached_result)
 
             tickers = await self.generate_ticker_ideas(industry)
-            print("TICKERS",tickers)
+            print("TICKERS", tickers)
             analyses = {}
             prices = {}
             industry_analsyis = {}
@@ -34,7 +38,8 @@ class StockService:
             async def analyze_ticker(ticker):
                 analysis = await self.analyze_stock(ticker)
                 if analysis is None:
-                    raise ValueError(f"Analysis for ticker {ticker} returned None")
+                    raise ValueError(
+                        f"Analysis for ticker {ticker} returned None")
                 return ticker, analysis['final_analysis'], analysis['price'], analysis
 
             tasks = [analyze_ticker(ticker) for ticker in tickers]
@@ -46,16 +51,15 @@ class StockService:
                 analyses[ticker] = final_analysis
                 prices[ticker] = price
 
-
             ranking = await self.rank_companies(industry, analyses, prices)
-            result = {"tickers": tickers, "analyses": analyses, "ranking": ranking}
+            result = {"tickers": tickers,
+                      "analyses": analyses, "ranking": ranking}
             # result = {"tickers": tickers, "analyses": analyses, "ranking": ranking, industry_analsyis: industry_analsyis}
 
-            
             # await self.cache_service.set(cache_key, result, expiration=3600)  # Cache for 1 hour
             return result
         except Exception as e:
-            print("ERROR",e)
+            print("ERROR", e)
             logging.error(f"Error in analyze_industry: {str(e)}")
             return {"error": "An error occurred while analyzing the industry"}
 
@@ -66,7 +70,7 @@ class StockService:
             if cached_result:
                 return cached_result
             print("============================================")
-            print("Analysing TICKER:",ticker)
+            print("Analysing TICKER:", ticker)
 
             news = await self.get_stock_data(ticker, 1)
 
@@ -109,12 +113,12 @@ class StockService:
 
             news = stock.news
             if news:
-                await self.cache_service.set(cache_key, json.dumps(news), expiration=3600)  # Cache for 1 hour
-            return  news
+                # Cache for 1 hour
+                await self.cache_service.set(cache_key, json.dumps(news), expiration=3600)
+            return news
         except Exception as e:
             logging.error(f"Error in get_stock_data for {ticker}: {str(e)}")
             return {"error": f"An error occurred while fetching stock data for {ticker}"}
-
 
     async def generate_ticker_ideas(self, industry):
         try:
@@ -131,10 +135,12 @@ class StockService:
             ticker_list = ast.literal_eval(response)
             result = [ticker.strip() for ticker in ticker_list]
 
-            await self.cache_service.set(cache_key, json.dumps(result), expiration=86400)  # Cache for 24 hours
+            # Cache for 24 hours
+            await self.cache_service.set(cache_key, json.dumps(result), expiration=86400)
             return result
         except Exception as e:
-            logging.error(f"Error in generate_ticker_ideas for {industry}: {str(e)}")
+            logging.error(
+                f"Error in generate_ticker_ideas for {industry}: {str(e)}")
             return []
 
     async def get_sentiment_analysis(self, ticker, news):
@@ -146,7 +152,7 @@ class StockService:
                 return cached_result.decode('utf-8')
 
             system_prompt = f"You are a sentiment analysis assistant. Analyze the sentiment of the given news articles for {ticker} and provide a summary of the overall sentiment and any notable changes over time. Be measured and discerning. You are a skeptical investor. Be precise and to the point."
-          
+
             news_text = ""
             for article in news[:5]:
                 print(f"analyzing article {article['title']}")
@@ -160,10 +166,12 @@ class StockService:
             response = await self.llm_service.generate_text(system_prompt, input_text, max_tokens=350)
 
             if response:
-                await self.cache_service.set(cache_key, response, expiration=7200)  # Cache for 2 hours
+                # Cache for 2 hours
+                await self.cache_service.set(cache_key, response, expiration=7200)
             return response
         except Exception as e:
-            logging.error(f"Error in get_sentiment_analysis for {ticker}: {str(e)}")
+            logging.error(
+                f"Error in get_sentiment_analysis for {ticker}: {str(e)}")
             return "Unable to retrieve sentiment analysis"
 
     async def get_analyst_ratings(self, ticker):
@@ -210,7 +218,8 @@ class StockService:
         except Exception as e:
             result = f"Error retrieving analyst ratings: {str(e)}"
 
-        await self.cache_service.set(cache_key, result, expiration=3600)  # Cache for 1 hour
+        # Cache for 1 hour
+        await self.cache_service.set(cache_key, result, expiration=3600)
         return result
 
     async def get_industry_analysis(self, ticker):
@@ -232,12 +241,14 @@ class StockService:
 
             response = await self.llm_service.generate_text(system_prompt, input_text, max_tokens=200)
 
-            await self.cache_service.set(cache_key, response, expiration=86400)  # Cache for 24 hours
+            # Cache for 24 hours
+            await self.cache_service.set(cache_key, response, expiration=86400)
             return response
 
         except:
             result = "Unable to retrieve industry analysis."
-            await self.cache_service.set(cache_key, result, expiration=3600)  # Cache for 1 hour
+            # Cache for 1 hour
+            await self.cache_service.set(cache_key, result, expiration=3600)
             return result
 
     async def get_final_analysis(self, ticker, comparisons, sentiment_analysis, analyst_ratings, industry_analysis):
@@ -253,12 +264,14 @@ class StockService:
 
             response = await self.llm_service.generate_text(system_prompt, input_text, max_tokens=400)
 
-            await self.cache_service.set(cache_key, response, expiration=3600)  # Cache for 1 hour
+            # Cache for 1 hour
+            await self.cache_service.set(cache_key, response, expiration=3600)
             return response
 
         except:
             result = "Unable to retrieve analysis."
-            await self.cache_service.set(cache_key, result, expiration=3600)  # Cache for 1 hour
+            # Cache for 1 hour
+            await self.cache_service.set(cache_key, result, expiration=3600)
             return result
 
     async def get_current_price(self, ticker):
@@ -275,7 +288,8 @@ class StockService:
             price = float(result)
 
             if result:
-                await self.cache_service.set(cache_key, price, expiration=60)  # Cache for 1 minute
+                # Cache for 1 minute
+                await self.cache_service.set(cache_key, price, expiration=60)
             return price
         except Exception as e:
             logging.error(f"Error in get_current_price for {ticker}: {str(e)}")
@@ -300,10 +314,67 @@ class StockService:
             response = await self.llm_service.generate_text(system_prompt, input_text, max_tokens=500)
 
             if response != "Unable to retrieve analysis.":
-                await self.cache_service.set(cache_key, response, expiration=3600)  # Cache for 1 hour
+                # Cache for 1 hour
+                await self.cache_service.set(cache_key, response, expiration=3600)
             return response
 
         except:
             result = "Unable to retrieve analysis."
-            await self.cache_service.set(cache_key, result, expiration=3600)  # Cache for 1 hour
+            # Cache for 1 hour
+            await self.cache_service.set(cache_key, result, expiration=3600)
             return result
+
+    async def get_top_50_sp500_stocks(self):
+        try:
+            cache_key = "top_50_sp500_stocks"
+            cached_result = await self.cache_service.get(cache_key)
+            if cached_result:
+                return json.loads(cached_result)
+
+            symbols = self._get_sp500_symbols()
+
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = [executor.submit(
+                    self._get_stock_info, symbol) for symbol in symbols]
+                results = [future.result() for future in as_completed(futures)]
+
+            df = pd.DataFrame(results)
+            df_sorted = df.sort_values('Market Cap', ascending=False)
+            top_50 = df_sorted.head(50)
+
+            top_50['Market Cap'] = top_50['Market Cap'].apply(
+                lambda x: f"${x/1e9:.2f}B")
+            top_50['Price'] = top_50['Price'].apply(lambda x: f"${x:.2f}")
+            top_50['Change'] = top_50['Change'].apply(lambda x: f"{x:.2f}%")
+            top_50['Volume'] = top_50['Volume'].apply(lambda x: f"{x:,}")
+
+            result = top_50.to_dict('records')
+            await self.cache_service.set(cache_key, json.dumps(result), expiration=900)
+            return result
+        except Exception as e:
+            logging.error(f"Error in get_top_50_sp500_stocks: {str(e)}")
+            return {"error": "An error occurred while fetching top 50 S&P 500 stocks"}
+
+    def _get_sp500_symbols(self):
+        if os.path.exists(self.CACHE_FILE):
+            cache_time = datetime.fromtimestamp(
+                os.path.getmtime(self.CACHE_FILE))
+            if (datetime.now() - cache_time).days < self.CACHE_EXPIRY_DAYS:
+                return pd.read_csv(self.CACHE_FILE)['Symbol'].tolist()
+
+        sp500 = pd.read_html(
+            'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0]
+        sp500.to_csv(self.CACHE_FILE, index=False)
+        return sp500['Symbol'].tolist()
+
+    def _get_stock_info(self, symbol):
+        stock = yf.Ticker(symbol)
+        info = stock.info
+        return {
+            'Symbol': symbol,
+            'Name': info.get('longName', 'N/A'),
+            'Market Cap': info.get('marketCap', 0),
+            'Price': info.get('currentPrice', 0),
+            'Change': info.get('regularMarketChangePercent', 0),
+            'Volume': info.get('volume', 0)
+        }

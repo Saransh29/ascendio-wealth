@@ -32,3 +32,5 @@ build/
 
 .env
 .env*
+
+sp500_cache.csv
