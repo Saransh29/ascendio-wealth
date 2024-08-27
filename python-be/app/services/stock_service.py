@@ -350,7 +350,7 @@ class StockService:
 
             result = top_50.to_dict('records')
             if result:
-                await self.cache_service.set(cache_key, json.dumps(result), expiration=1800)
+                await self.cache_service.set(cache_key, json.dumps(result), expiration=86400)
             return result
         except Exception as e:
             logging.error(f"Error in get_top_50_sp500_stocks: {str(e)}")
